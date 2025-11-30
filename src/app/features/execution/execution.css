@@ -1,0 +1,127 @@
+.execution-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.election-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+}
+
+.election-logo {
+    max-height: 120px;
+    border-radius: 8px;
+}
+
+.election-info h1 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 2.5rem;
+}
+
+.election-info p {
+    margin: 0;
+    color: #666;
+    font-size: 1.2rem;
+}
+
+.voting-item {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.voting-item h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #444;
+}
+
+.chart-container {
+    height: 300px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.stats {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: bold;
+    color: #666;
+}
+
+.voting-controls {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.voting-controls h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.option-btn {
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.option-btn:hover {
+    border-color: #adb5bd;
+    background: #f1f3f5;
+}
+
+.option-btn.selected {
+    border-color: #007bff;
+    background: #e7f1ff;
+    color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-save {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save:hover {
+    background: #218838;
+}
+
+.btn-save:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}

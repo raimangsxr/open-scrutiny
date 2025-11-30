@@ -1,0 +1,44 @@
+<div class="execution-container" *ngIf="config">
+
+    <header class="election-header">
+        <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Logo" class="election-logo">
+        <div class="election-info">
+            <h1>{{ config.title }}</h1>
+            <p>{{ config.description }}</p>
+        </div>
+    </header>
+
+    <div class="voting-items">
+        <div *ngFor="let item of config.votingItems" class="voting-item card">
+            <h2>{{ item.question }}</h2>
+
+            <div class="chart-container">
+                <ngx-charts-bar-vertical [view]="view" [scheme]="colorScheme" [results]="chartData[item.id]"
+                    [gradient]="gradient" [xAxis]="showXAxis" [yAxis]="showYAxis" [showXAxisLabel]="showXAxisLabel"
+                    [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel">
+                </ngx-charts-bar-vertical>
+            </div>
+
+            <div class="stats">
+                <p>Total Votos: {{ getTotalVotes(item) }}</p>
+            </div>
+
+            <div class="voting-controls">
+                <h3>Añadir Voto</h3>
+                <div class="options-grid">
+                    <button *ngFor="let option of item.options" class="option-btn"
+                        [class.selected]="selectedOptions[item.id] === option.id"
+                        (click)="selectOption(item.id, option.id)">
+                        {{ option.label }}
+                    </button>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-save" [disabled]="!selectedOptions[item.id]" (click)="saveVote(item.id)">
+                        Guardar Voto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

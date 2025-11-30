@@ -1,0 +1,66 @@
+<div class="config-container">
+  <h1>Configuración de Elecciones</h1>
+  
+  <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
+    
+    <!-- General Info -->
+    <div class="section">
+      <h2>Información General</h2>
+      
+      <div class="form-group">
+        <label for="logo">Logo del Organismo</label>
+        <input type="file" id="logo" (change)="onLogoSelected($event)" accept="image/*">
+        <div *ngIf="logoPreview" class="logo-preview">
+          <img [src]="logoPreview" alt="Logo preview">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="title">Título de las Elecciones</label>
+        <input type="text" id="title" formControlName="title" placeholder="Ej: Elecciones Generales 2025">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descripción</label>
+        <textarea id="description" formControlName="description" rows="3" placeholder="Descripción breve..."></textarea>
+      </div>
+    </div>
+
+    <!-- Voting Items -->
+    <div class="section">
+      <h2>Votaciones</h2>
+      
+      <div formArrayName="votingItems">
+        <div *ngFor="let item of votingItems.controls; let i = index" [formGroupName]="i" class="voting-item card">
+          <div class="card-header">
+            <h3>Votación #{{i + 1}}</h3>
+            <button type="button" class="btn-danger" (click)="removeVotingItem(i)" *ngIf="votingItems.length > 1">Eliminar</button>
+          </div>
+
+          <div class="form-group">
+            <label>¿Qué se vota?</label>
+            <input type="text" formControlName="question" placeholder="Ej: Delegado de Clase">
+          </div>
+
+          <!-- Options -->
+          <div class="options-section">
+            <h4>Opciones</h4>
+            <div formArrayName="options">
+              <div *ngFor="let option of getOptions(i).controls; let j = index" [formGroupName]="j" class="option-row">
+                <input type="text" formControlName="label" placeholder="Opción {{j + 1}}">
+                <button type="button" class="btn-icon" (click)="removeOption(i, j)" *ngIf="getOptions(i).length > 2">🗑️</button>
+              </div>
+            </div>
+            <button type="button" class="btn-secondary btn-sm" (click)="addOption(i)">+ Añadir Opción</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-secondary full-width" (click)="addVotingItem()">+ Añadir Nueva Votación</button>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary full-width" [disabled]="!configForm.valid">Iniciar Escrutinio</button>
+    </div>
+  </form>
+</div>
