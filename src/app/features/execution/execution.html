@@ -21,7 +21,7 @@
                     <ngx-charts-bar-vertical [scheme]="colorScheme" [results]="chartData[item.id]" [gradient]="gradient"
                         [xAxis]="showXAxis" [yAxis]="showYAxis" [showXAxisLabel]="showXAxisLabel"
                         [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel"
-                        [yAxisTicks]="yAxisTicks">
+                        [yAxisTicks]="getYAxisTicks(item.id)">
                     </ngx-charts-bar-vertical>
                 </div>
             </mat-card-content>

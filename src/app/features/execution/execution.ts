@@ -29,8 +29,8 @@ export class ExecutionComponent implements OnInit {
   yAxisLabel = 'Votos';
   colorScheme: string | any = 'vivid';
 
-  // Force integer ticks on Y axis
-  yAxisTicks: number[] = [];
+  // Y-axis ticks per voting item
+  yAxisTicksMap: { [itemId: string]: number[] } = {};
 
   constructor(private voteService: VoteService, private router: Router) { }
 
@@ -54,10 +54,14 @@ export class ExecutionComponent implements OnInit {
         value: opt.count
       }));
 
-      // Calculate integer ticks for Y axis
+      // Calculate integer ticks for Y axis specific to this item
       const maxVotes = Math.max(...item.options.map(o => o.count), 1);
-      this.yAxisTicks = Array.from({ length: maxVotes + 1 }, (_, i) => i);
+      this.yAxisTicksMap[item.id] = Array.from({ length: maxVotes + 1 }, (_, i) => i);
     });
+  }
+
+  getYAxisTicks(itemId: string): number[] {
+    return this.yAxisTicksMap[itemId] || [0, 1];
   }
 
   selectOption(itemId: string, optionId: string) {
