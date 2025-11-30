@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { VoteService, ElectionConfig, VotingItem } from '../../core/services/vote.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-execution',
   standalone: true,
-  imports: [CommonModule, NgxChartsModule, MatCardModule, MatButtonModule],
+  imports: [CommonModule, NgxChartsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   templateUrl: './execution.html',
   styleUrl: './execution.css'
 })
