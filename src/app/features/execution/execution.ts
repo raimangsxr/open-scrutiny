@@ -18,8 +18,7 @@ export class ExecutionComponent implements OnInit {
   selectedOptions: { [itemId: string]: string } = {};
   chartData: { [itemId: string]: any[] } = {};
 
-  // Chart options - responsive sizing
-  view: [number, number] = [350, 250];
+  // Chart options - responsive to container size
   showXAxis = true;
   showYAxis = true;
   gradient = false;

@@ -52,13 +52,22 @@
     min-width: 300px;
     display: flex;
     flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.chart-card mat-card-header {
+    padding: 0.75rem 1rem !important;
+    flex-shrink: 0;
 }
 
 .chart-card mat-card-content {
     flex: 1 1 auto;
     display: flex;
     align-items: center;
-    padding: 0.5rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
 }
 
 .chart-wrapper {
@@ -67,6 +76,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
 }
 
 /* Row 2: Voting Buttons Cards */
