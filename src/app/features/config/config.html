@@ -1,66 +1,93 @@
 <div class="config-container">
   <h1>Configuración de Elecciones</h1>
-  
+
   <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
-    
-    <!-- General Info -->
-    <div class="section">
-      <h2>Información General</h2>
-      
-      <div class="form-group">
-        <label for="logo">Logo del Organismo</label>
-        <input type="file" id="logo" (change)="onLogoSelected($event)" accept="image/*">
-        <div *ngIf="logoPreview" class="logo-preview">
-          <img [src]="logoPreview" alt="Logo preview">
+
+    <!-- General Info Card -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title>Información General</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-group">
+          <label for="logo">Logo del Organismo</label>
+          <input type="file" id="logo" (change)="onLogoSelected($event)" accept="image/*">
+          <div *ngIf="logoPreview" class="logo-preview">
+            <img [src]="logoPreview" alt="Logo preview">
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="title">Título de las Elecciones</label>
-        <input type="text" id="title" formControlName="title" placeholder="Ej: Elecciones Generales 2025">
-      </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Título de las Elecciones</mat-label>
+          <input matInput formControlName="title" placeholder="Ej: Elecciones Generales 2025">
+        </mat-form-field>
 
-      <div class="form-group">
-        <label for="description">Descripción</label>
-        <textarea id="description" formControlName="description" rows="3" placeholder="Descripción breve..."></textarea>
-      </div>
-    </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="description" rows="3" placeholder="Descripción breve..."></textarea>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
 
-    <!-- Voting Items -->
-    <div class="section">
-      <h2>Votaciones</h2>
-      
-      <div formArrayName="votingItems">
-        <div *ngFor="let item of votingItems.controls; let i = index" [formGroupName]="i" class="voting-item card">
-          <div class="card-header">
-            <h3>Votación #{{i + 1}}</h3>
-            <button type="button" class="btn-danger" (click)="removeVotingItem(i)" *ngIf="votingItems.length > 1">Eliminar</button>
-          </div>
+    <!-- Voting Items Card -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title>Votaciones</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div formArrayName="votingItems">
+          <mat-card *ngFor="let item of votingItems.controls; let i = index" [formGroupName]="i"
+            class="voting-item-card">
+            <mat-card-header>
+              <mat-card-title>Votación #{{i + 1}}</mat-card-title>
+              <button mat-icon-button color="warn" type="button" (click)="removeVotingItem(i)"
+                *ngIf="votingItems.length > 1">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>¿Qué se vota?</mat-label>
+                <input matInput formControlName="question" placeholder="Ej: Delegado de Clase">
+              </mat-form-field>
 
-          <div class="form-group">
-            <label>¿Qué se vota?</label>
-            <input type="text" formControlName="question" placeholder="Ej: Delegado de Clase">
-          </div>
-
-          <!-- Options -->
-          <div class="options-section">
-            <h4>Opciones</h4>
-            <div formArrayName="options">
-              <div *ngFor="let option of getOptions(i).controls; let j = index" [formGroupName]="j" class="option-row">
-                <input type="text" formControlName="label" placeholder="Opción {{j + 1}}">
-                <button type="button" class="btn-icon" (click)="removeOption(i, j)" *ngIf="getOptions(i).length > 2">🗑️</button>
+              <!-- Options -->
+              <div class="options-section">
+                <h4>Opciones</h4>
+                <div formArrayName="options">
+                  <div *ngFor="let option of getOptions(i).controls; let j = index" [formGroupName]="j"
+                    class="option-row">
+                    <mat-form-field appearance="outline" class="option-field">
+                      <mat-label>Opción {{j + 1}}</mat-label>
+                      <input matInput formControlName="label" placeholder="Nombre de la opción">
+                    </mat-form-field>
+                    <button mat-icon-button color="warn" type="button" (click)="removeOption(i, j)"
+                      *ngIf="getOptions(i).length > 1">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                </div>
+                <button mat-stroked-button type="button" (click)="addOption(i)" color="primary">
+                  <mat-icon>add</mat-icon>
+                  Añadir Opción
+                </button>
               </div>
-            </div>
-            <button type="button" class="btn-secondary btn-sm" (click)="addOption(i)">+ Añadir Opción</button>
-          </div>
+            </mat-card-content>
+          </mat-card>
         </div>
-      </div>
 
-      <button type="button" class="btn-secondary full-width" (click)="addVotingItem()">+ Añadir Nueva Votación</button>
-    </div>
+        <button mat-raised-button type="button" (click)="addVotingItem()" color="primary" class="add-voting-btn">
+          <mat-icon>add</mat-icon>
+          Añadir Nueva Votación
+        </button>
+      </mat-card-content>
+    </mat-card>
 
+    <!-- Submit -->
     <div class="actions">
-      <button type="submit" class="btn-primary full-width" [disabled]="!configForm.valid">Iniciar Escrutinio</button>
+      <button mat-raised-button type="submit" color="accent" class="submit-btn" [disabled]="!configForm.valid">
+        Iniciar Escrutinio
+      </button>
     </div>
   </form>
 </div>

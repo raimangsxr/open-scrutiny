@@ -1,44 +1,60 @@
 <div class="execution-container" *ngIf="config">
 
-    <header class="election-header">
+    <!-- Election Header -->
+    <div class="election-header">
         <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Logo" class="election-logo">
         <div class="election-info">
             <h1>{{ config.title }}</h1>
             <p>{{ config.description }}</p>
         </div>
-    </header>
+    </div>
 
-    <div class="voting-items">
-        <div *ngFor="let item of config.votingItems" class="voting-item card">
-            <h2>{{ item.question }}</h2>
+    <!-- Row 1: Horizontal Chart Cards -->
+    <div class="charts-row">
+        <mat-card *ngFor="let item of config.votingItems" class="chart-card">
+            <mat-card-header>
+                <mat-card-title>{{ item.question }}</mat-card-title>
+                <mat-card-subtitle>Total Votos: {{ getTotalVotes(item) }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="chart-wrapper">
+                    <ngx-charts-bar-vertical [view]="view" [scheme]="colorScheme" [results]="chartData[item.id]"
+                        [gradient]="gradient" [xAxis]="showXAxis" [yAxis]="showYAxis" [showXAxisLabel]="showXAxisLabel"
+                        [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel"
+                        [yAxisTicks]="yAxisTicks">
+                    </ngx-charts-bar-vertical>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
 
-            <div class="chart-container">
-                <ngx-charts-bar-vertical [view]="view" [scheme]="colorScheme" [results]="chartData[item.id]"
-                    [gradient]="gradient" [xAxis]="showXAxis" [yAxis]="showYAxis" [showXAxisLabel]="showXAxisLabel"
-                    [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel">
-                </ngx-charts-bar-vertical>
-            </div>
-
-            <div class="stats">
-                <p>Total Votos: {{ getTotalVotes(item) }}</p>
-            </div>
-
-            <div class="voting-controls">
-                <h3>Añadir Voto</h3>
-                <div class="options-grid">
-                    <button *ngFor="let option of item.options" class="option-btn"
-                        [class.selected]="selectedOptions[item.id] === option.id"
-                        (click)="selectOption(item.id, option.id)">
+    <!-- Row 2: Voting Buttons Cards (one per voting item) -->
+    <div class="voting-row">
+        <mat-card *ngFor="let item of config.votingItems" class="voting-card">
+            <mat-card-header>
+                <mat-card-title>{{ item.question }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="option-buttons">
+                    <button mat-raised-button *ngFor="let option of item.options"
+                        [color]="isOptionSelected(item.id, option.id) ? 'primary' : ''"
+                        (click)="selectOption(item.id, option.id)" class="option-btn">
                         {{ option.label }}
                     </button>
                 </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
 
-                <div class="actions">
-                    <button class="btn-save" [disabled]="!selectedOptions[item.id]" (click)="saveVote(item.id)">
-                        Guardar Voto
-                    </button>
-                </div>
-            </div>
-        </div>
+    <!-- Row 3: Centralized Count Vote Button -->
+    <div class="action-row">
+        <mat-card class="action-card">
+            <mat-card-content>
+                <button mat-raised-button color="accent" [disabled]="!hasAnySelection()" (click)="saveAllVotes()"
+                    class="count-vote-btn">
+                    Contabilizar Voto
+                </button>
+            </mat-card-content>
+        </mat-card>
     </div>
 </div>

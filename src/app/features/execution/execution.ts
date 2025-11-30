@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 import { VoteService, ElectionConfig, VotingItem } from '../../core/services/vote.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-execution',
   standalone: true,
-  imports: [CommonModule, NgxChartsModule],
+  imports: [CommonModule, NgxChartsModule, MatCardModule, MatButtonModule],
   templateUrl: './execution.html',
   styleUrl: './execution.css'
 })
@@ -16,7 +18,8 @@ export class ExecutionComponent implements OnInit {
   selectedOptions: { [itemId: string]: string } = {};
   chartData: { [itemId: string]: any[] } = {};
 
-  view: [number, number] = [700, 300];
+  // Chart options - responsive sizing
+  view: [number, number] = [350, 250];
   showXAxis = true;
   showYAxis = true;
   gradient = false;
@@ -26,6 +29,9 @@ export class ExecutionComponent implements OnInit {
   showYAxisLabel = true;
   yAxisLabel = 'Votos';
   colorScheme: string | any = 'vivid';
+
+  // Force integer ticks on Y axis
+  yAxisTicks: number[] = [];
 
   constructor(private voteService: VoteService, private router: Router) { }
 
@@ -48,6 +54,10 @@ export class ExecutionComponent implements OnInit {
         name: opt.label,
         value: opt.count
       }));
+
+      // Calculate integer ticks for Y axis
+      const maxVotes = Math.max(...item.options.map(o => o.count), 1);
+      this.yAxisTicks = Array.from({ length: maxVotes + 1 }, (_, i) => i);
     });
   }
 
@@ -55,12 +65,23 @@ export class ExecutionComponent implements OnInit {
     this.selectedOptions[itemId] = optionId;
   }
 
-  saveVote(itemId: string) {
-    const selectedOptionId = this.selectedOptions[itemId];
-    if (selectedOptionId) {
-      this.voteService.saveVote(itemId, selectedOptionId);
-      delete this.selectedOptions[itemId]; // Clear selection after saving
-    }
+  isOptionSelected(itemId: string, optionId: string): boolean {
+    return this.selectedOptions[itemId] === optionId;
+  }
+
+  hasAnySelection(): boolean {
+    if (!this.config) return false;
+    // Check that ALL voting items have a selection
+    return this.config.votingItems.every(item =>
+      this.selectedOptions[item.id] !== undefined
+    );
+  }
+
+  saveAllVotes() {
+    Object.entries(this.selectedOptions).forEach(([itemId, optionId]) => {
+      this.voteService.saveVote(itemId, optionId);
+    });
+    this.selectedOptions = {}; // Clear all selections after saving
   }
 
   getTotalVotes(item: VotingItem): number {

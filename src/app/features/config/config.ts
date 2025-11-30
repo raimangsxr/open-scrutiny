@@ -2,13 +2,26 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { VoteService, ElectionConfig } from '../../core/services/vote.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-config',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
+  ],
   templateUrl: './config.html',
   styleUrl: './config.css'
 })
@@ -48,9 +61,20 @@ export class ConfigComponent {
     });
     this.votingItems.push(item);
 
-    // Add initial options
-    this.addOption(this.votingItems.length - 1);
-    this.addOption(this.votingItems.length - 1);
+    // Add pre-configured options: SI, NO, N/C
+    const itemIndex = this.votingItems.length - 1;
+    this.addPreconfiguredOption(itemIndex, 'SI');
+    this.addPreconfiguredOption(itemIndex, 'NO');
+    this.addPreconfiguredOption(itemIndex, 'N/C');
+  }
+
+  addPreconfiguredOption(itemIndex: number, label: string) {
+    const option = this.fb.group({
+      id: [uuidv4()],
+      label: [label, Validators.required],
+      count: [0]
+    });
+    this.getOptions(itemIndex).push(option);
   }
 
   removeVotingItem(index: number) {
@@ -67,7 +91,11 @@ export class ConfigComponent {
   }
 
   removeOption(itemIndex: number, optionIndex: number) {
-    this.getOptions(itemIndex).removeAt(optionIndex);
+    const options = this.getOptions(itemIndex);
+    // Allow removing if at least 1 option will remain
+    if (options.length > 1) {
+      options.removeAt(optionIndex);
+    }
   }
 
   onLogoSelected(event: Event) {
