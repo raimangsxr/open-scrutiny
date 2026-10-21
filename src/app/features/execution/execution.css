@@ -139,6 +139,47 @@
     font-weight: 600;
 }
 
+.storage-error-card {
+    max-width: 36rem;
+    margin: 2rem auto;
+}
+
+.manual-counts {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.manual-counts-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    color: #555;
+}
+
+.manual-count-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.manual-option-label {
+    min-width: 4rem;
+    font-weight: 500;
+}
+
+.manual-count-field {
+    flex: 1;
+    max-width: 8rem;
+}
+
+.action-hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    color: #666;
+    text-align: center;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .charts-row {

@@ -1,6 +1,19 @@
-<div class="execution-container" *ngIf="config">
+<div class="execution-container" *ngIf="storageError">
+    <mat-card class="storage-error-card">
+        <mat-card-header>
+            <mat-card-title>Datos de elección no disponibles</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <p>{{ storageError }}</p>
+            <button mat-raised-button color="primary" type="button" (click)="reconfigure()">
+                Ir a configuración
+            </button>
+        </mat-card-content>
+    </mat-card>
+</div>
 
-    <!-- Election Header -->
+<div class="execution-container" *ngIf="config && !storageError">
+
     <div class="election-header">
         <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Logo" class="election-logo">
         <div class="election-info">
@@ -9,7 +22,6 @@
         </div>
     </div>
 
-    <!-- Row 1: Horizontal Chart Cards -->
     <div class="charts-row">
         <mat-card *ngFor="let item of config.votingItems" class="chart-card">
             <mat-card-header>
@@ -28,7 +40,6 @@
         </mat-card>
     </div>
 
-    <!-- Row 2: Voting Buttons Cards (one per voting item) -->
     <div class="voting-row">
         <mat-card *ngFor="let item of config.votingItems" class="voting-card">
             <mat-card-header>
@@ -42,14 +53,28 @@
                         {{ option.label }}
                     </button>
                 </div>
+                <div class="manual-counts">
+                    <p class="manual-counts-label">Totales por opción (entrada manual)</p>
+                    <div class="manual-count-row" *ngFor="let option of item.options">
+                        <span class="manual-option-label">{{ option.label }}</span>
+                        <mat-form-field appearance="outline" class="manual-count-field">
+                            <mat-label>Votos</mat-label>
+                            <input matInput type="number" min="0" step="1"
+                                [(ngModel)]="manualCounts[item.id][option.id]" [name]="item.id + '-' + option.id">
+                        </mat-form-field>
+                    </div>
+                    <button mat-stroked-button type="button" color="primary" (click)="applyManualCounts()">
+                        Aplicar totales manuales
+                    </button>
+                </div>
             </mat-card-content>
         </mat-card>
     </div>
 
-    <!-- Row 3: Centralized Count Vote Button -->
     <div class="action-row">
         <mat-card class="action-card">
             <mat-card-content>
+                <p class="action-hint">Seleccione una opción por pregunta y pulse para sumar un voto a cada una.</p>
                 <button mat-raised-button color="accent" [disabled]="!hasAnySelection()" (click)="saveAllVotes()"
                     class="count-vote-btn">
                     Contabilizar Voto
