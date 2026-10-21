@@ -135,6 +135,19 @@ describe('VoteService', () => {
     expect(config!.votingItems[0].options[0].count).toBe(0);
   });
 
+  it('clearVoteCounts zeros escrutinio and clears undo', async () => {
+    const service = TestBed.inject(VoteService);
+    service.saveConfig(sampleConfig());
+    service.commitBallot({ 'item-1': 'opt-si' });
+
+    service.clearVoteCounts();
+
+    const config = await firstValueFrom(service.config$);
+    expect(config!.votingItems[0].options[0].count).toBe(0);
+    expect(service.canUndoLastBallot()).toBe(false);
+    expect(localStorage.getItem(VOTES_KEY)).toBeTruthy();
+  });
+
   it('applyManualCorrection clears undo and sets absolute counts', async () => {
     const service = TestBed.inject(VoteService);
     service.saveConfig(twoQuestionConfig());

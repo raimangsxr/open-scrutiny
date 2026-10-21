@@ -44,6 +44,10 @@ export class VoteService {
         return this.storageErrorSubject.value;
     }
 
+    getConfig(): ElectionConfig | null {
+        return this.configSubject.value;
+    }
+
     canUndoLastBallot(): boolean {
         return this.readLastBallot() !== null;
     }
@@ -86,6 +90,20 @@ export class VoteService {
         this.persistCounts(currentConfig);
         this.configSubject.next({ ...currentConfig });
         return true;
+    }
+
+    clearVoteCounts(): void {
+        const currentConfig = this.configSubject.value;
+        if (!currentConfig) return;
+
+        currentConfig.votingItems.forEach((item) => {
+            item.options.forEach((opt) => {
+                opt.count = 0;
+            });
+        });
+        this.clearLastBallot();
+        this.persistCounts(currentConfig);
+        this.configSubject.next({ ...currentConfig });
     }
 
     applyManualCorrection(counts: Record<string, Record<string, number>>): void {

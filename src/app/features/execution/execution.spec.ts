@@ -1,11 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { MatDialog } from '@angular/material/dialog';
 import { routes } from '../../app.routes';
 import { VoteService } from '../../core/services/vote.service';
 import { ExecutionComponent } from './execution';
-import { TotalCorrectionDialogComponent } from './total-correction-dialog';
 
 function seedConfig() {
   const config = {
@@ -105,15 +103,9 @@ describe('ExecutionComponent', () => {
 
   it('opens corrección de totales dialog on Ctrl+Shift+E', async () => {
     TestBed.resetTestingModule();
-    const dialogOpen = vi.fn().mockReturnValue({ afterClosed: () => ({ subscribe: () => undefined }) });
     await TestBed.configureTestingModule({
       imports: [ExecutionComponent],
-      providers: [
-        provideRouter(routes),
-        VoteService,
-        provideNoopAnimations(),
-        { provide: MatDialog, useValue: { open: dialogOpen } },
-      ],
+      providers: [provideRouter(routes), VoteService, provideNoopAnimations()],
     }).compileComponents();
 
     TestBed.inject(VoteService).saveConfig({
@@ -134,14 +126,13 @@ describe('ExecutionComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
+    const openSpy = vi.spyOn(fixture.componentInstance, 'openExecutionOptionsDialog');
+
     fixture.componentInstance.onKeyDown(
       new KeyboardEvent('keydown', { ctrlKey: true, shiftKey: true, key: 'e' })
     );
 
-    expect(dialogOpen).toHaveBeenCalledWith(
-      TotalCorrectionDialogComponent,
-      expect.objectContaining({ data: expect.objectContaining({ config: expect.any(Object) }) })
-    );
+    expect(openSpy).toHaveBeenCalled();
   });
 
   it('shows shortcut hint for corrección de totales', async () => {
@@ -157,6 +148,6 @@ describe('ExecutionComponent', () => {
     await fixture.whenStable();
 
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('Corrección de totales: Ctrl+Shift+E');
+    expect(el.textContent).toContain('Opciones de ejecución: Ctrl+Shift+E');
   });
 });

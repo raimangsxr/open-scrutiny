@@ -14,6 +14,12 @@ import {
   TotalCorrectionDialogComponent,
   TotalCorrectionDialogData,
 } from './total-correction-dialog';
+import { computeYAxisTicks } from '../../core/chart-axis.util';
+import {
+  ExecutionMenuAction,
+  ExecutionOptionsDialogComponent,
+} from './execution-options-dialog';
+import { ConfirmActionDialogComponent } from './confirm-action-dialog';
 
 const COLUMNS_PER_ROW = 6;
 
@@ -77,7 +83,7 @@ export class ExecutionComponent implements OnInit, OnDestroy {
     if (!this.config || this.storageError) return;
     if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'e') {
       event.preventDefault();
-      this.openTotalCorrectionDialog();
+      this.openExecutionOptionsDialog();
     }
   }
 
@@ -115,6 +121,16 @@ export class ExecutionComponent implements OnInit, OnDestroy {
     });
   }
 
+  openExecutionOptionsDialog() {
+    if (!this.config) return;
+    const ref = this.dialog.open(ExecutionOptionsDialogComponent, { width: '26rem' });
+    ref.afterClosed().subscribe((action) => {
+      if (action) {
+        this.handleExecutionMenuAction(action);
+      }
+    });
+  }
+
   openTotalCorrectionDialog() {
     if (!this.config) return;
     const data: TotalCorrectionDialogData = { config: this.config };
@@ -126,6 +142,63 @@ export class ExecutionComponent implements OnInit, OnDestroy {
     ref.afterClosed().subscribe((counts) => {
       if (counts) {
         this.voteService.applyManualCorrection(counts);
+        this.selectedOptions = {};
+      }
+    });
+  }
+
+  private handleExecutionMenuAction(action: ExecutionMenuAction) {
+    switch (action) {
+      case 'clear-votes':
+        this.confirmAndRun({
+          title: 'Limpiar votación',
+          message:
+            'Se pondrán todos los conteos del escrutinio a cero. La configuración del proceso electoral no cambia.',
+          confirmLabel: 'Limpiar votación',
+          onConfirm: () => {
+            this.voteService.clearVoteCounts();
+            this.selectedOptions = {};
+          },
+        });
+        break;
+      case 'reset-config':
+        this.confirmAndRun({
+          title: 'Reiniciar configuración',
+          message:
+            'Se borrarán la configuración y todos los votos guardados. Tendrá que definir de nuevo el proceso electoral.',
+          confirmLabel: 'Reiniciar',
+          onConfirm: () => {
+            this.voteService.reset();
+            this.router.navigate(['/config']);
+          },
+        });
+        break;
+      case 'edit-config':
+        this.router.navigate(['/config']);
+        break;
+      case 'total-correction':
+        this.openTotalCorrectionDialog();
+        break;
+    }
+  }
+
+  private confirmAndRun(opts: {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+  }) {
+    const ref = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '24rem',
+      data: {
+        title: opts.title,
+        message: opts.message,
+        confirmLabel: opts.confirmLabel,
+      },
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        opts.onConfirm();
       }
     });
   }
@@ -165,8 +238,8 @@ export class ExecutionComponent implements OnInit, OnDestroy {
         value: opt.count,
       }));
 
-      const maxVotes = Math.max(...item.options.map((o) => o.count), 1);
-      this.yAxisTicksMap[item.id] = Array.from({ length: maxVotes + 1 }, (_, i) => i);
+      const maxVotes = Math.max(...item.options.map((o) => o.count), 0);
+      this.yAxisTicksMap[item.id] = computeYAxisTicks(maxVotes);
     });
   }
 }

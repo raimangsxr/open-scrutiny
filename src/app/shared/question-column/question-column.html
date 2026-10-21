@@ -2,7 +2,7 @@
   <div class="chart-section">
     <h2 class="question-title">{{ item.question }}</h2>
     <p class="vote-total">Total: {{ totalVotes() }}</p>
-    <div class="chart-wrapper">
+    <div class="chart-wrapper" #chartWrapper>
       <ngx-charts-bar-vertical
         [scheme]="colorScheme"
         [results]="chartResults"
@@ -11,24 +11,28 @@
         [yAxis]="showYAxis"
         [showXAxisLabel]="showXAxisLabel"
         [showYAxisLabel]="showYAxisLabel"
-        [xAxisLabel]="xAxisLabel"
         [yAxisLabel]="yAxisLabel"
         [yAxisTicks]="yAxisTicks"
+        [showDataLabel]="showDataLabel"
+        [trimXAxisTicks]="trimXAxisTicks"
+        [rotateXAxisTicks]="rotateXAxisTicks"
+        [wrapTicks]="wrapTicks"
+        [maxXAxisTickLength]="maxXAxisTickLength"
+        [barPadding]="barPadding"
       >
       </ngx-charts-bar-vertical>
     </div>
   </div>
-  <div class="options-section">
+  <div class="options-section" [style.--option-count]="item.options.length">
+    <p class="options-section-label">Registrar voto</p>
     <button
-      mat-raised-button
       type="button"
       *ngFor="let option of item.options"
       class="option-btn"
       [class.option-btn-pressed]="isPressed(option.id)"
-      [color]="isPressed(option.id) ? 'primary' : undefined"
       (click)="onOptionClick(option.id)"
     >
-      {{ option.label }}
+      <span class="option-btn-label">{{ option.label }}</span>
     </button>
   </div>
 </div>

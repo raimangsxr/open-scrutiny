@@ -45,15 +45,18 @@ export class ConfigComponent implements OnInit, OnDestroy {
       logoUrl: [null],
       votingItems: this.fb.array([])
     });
-
-    // Add initial voting item
-    this.addVotingItem();
   }
 
   ngOnInit() {
-    this.storageErrorSub = this.voteService.storageError$.subscribe(
-      (err) => (this.storageError = err)
-    );
+    this.storageErrorSub = this.voteService.storageError$.subscribe((err) => {
+      this.storageError = err;
+    });
+    const existing = this.voteService.getConfig();
+    if (existing && !this.voteService.getStorageError()) {
+      this.loadConfigIntoForm(existing);
+    } else if (this.votingItems.length === 0) {
+      this.addVotingItem();
+    }
   }
 
   ngOnDestroy() {
@@ -136,5 +139,34 @@ export class ConfigComponent implements OnInit, OnDestroy {
       this.voteService.saveConfig(config);
       this.router.navigate(['/execution']);
     }
+  }
+
+  private loadConfigIntoForm(config: ElectionConfig) {
+    this.votingItems.clear();
+    this.configForm.patchValue({
+      title: config.title,
+      description: config.description,
+      logoUrl: config.logoUrl,
+    });
+    this.logoPreview = config.logoUrl;
+
+    config.votingItems.forEach((item) => {
+      const itemGroup = this.fb.group({
+        id: [item.id],
+        question: [item.question, Validators.required],
+        options: this.fb.array([]),
+      });
+      this.votingItems.push(itemGroup);
+      const itemIndex = this.votingItems.length - 1;
+      item.options.forEach((opt) => {
+        this.getOptions(itemIndex).push(
+          this.fb.group({
+            id: [opt.id],
+            label: [opt.label, Validators.required],
+            count: [opt.count],
+          })
+        );
+      });
+    });
   }
 }
