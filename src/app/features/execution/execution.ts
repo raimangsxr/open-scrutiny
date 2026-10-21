@@ -40,7 +40,7 @@ export class ExecutionComponent implements OnInit, OnDestroy {
   xAxisLabel = 'Opciones';
   showYAxisLabel = true;
   yAxisLabel = 'Votos';
-  colorScheme: string | unknown = 'vivid';
+  colorScheme: string = 'vivid';
 
   yAxisTicksMap: { [itemId: string]: number[] } = {};
 
