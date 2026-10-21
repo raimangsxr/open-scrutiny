@@ -1,0 +1,7 @@
+<header class="election-header">
+  <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo" class="election-logo" />
+  <div class="election-info">
+    <h1>{{ title }}</h1>
+    <p *ngIf="description">{{ description }}</p>
+  </div>
+</header>

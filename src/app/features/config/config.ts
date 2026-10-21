@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { VoteService, ElectionConfig } from '../../core/services/vote.service';
 import { v4 as uuidv4 } from 'uuid';
 import { Subscription } from 'rxjs';
+import { ElectionHeaderComponent } from '../../shared/election-header/election-header';
 
 @Component({
   selector: 'app-config',
@@ -21,10 +22,11 @@ import { Subscription } from 'rxjs';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    ElectionHeaderComponent,
   ],
   templateUrl: './config.html',
-  styleUrl: './config.css'
+  styleUrls: ['./config.css', '../../shared/styles/app-layout.css'],
 })
 export class ConfigComponent implements OnInit, OnDestroy {
   configForm: FormGroup;

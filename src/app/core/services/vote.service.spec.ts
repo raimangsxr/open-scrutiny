@@ -4,6 +4,7 @@ import { ElectionConfig, VoteService } from './vote.service';
 
 const CONFIG_KEY = 'vote_app_data';
 const VOTES_KEY = 'vote_app_counts';
+const LAST_BALLOT_KEY = 'vote_app_last_ballot';
 
 function sampleConfig(): ElectionConfig {
   return {
@@ -18,6 +19,26 @@ function sampleConfig(): ElectionConfig {
           { id: 'opt-si', label: 'SI', count: 0 },
           { id: 'opt-no', label: 'NO', count: 0 },
         ],
+      },
+    ],
+  };
+}
+
+function twoQuestionConfig(): ElectionConfig {
+  return {
+    title: 'Dos preguntas',
+    description: '',
+    logoUrl: null,
+    votingItems: [
+      {
+        id: 'item-1',
+        question: 'P1',
+        options: [{ id: 'a1', label: 'A', count: 0 }],
+      },
+      {
+        id: 'item-2',
+        question: 'P2',
+        options: [{ id: 'b1', label: 'B', count: 0 }],
       },
     ],
   };
@@ -45,6 +66,7 @@ describe('VoteService', () => {
     const stored = JSON.parse(localStorage.getItem(CONFIG_KEY)!);
     expect(stored.votingItems[0].options[0].count).toBe(0);
     expect(localStorage.getItem(VOTES_KEY)).toBeNull();
+    expect(localStorage.getItem(LAST_BALLOT_KEY)).toBeNull();
   });
 
   it('saveVote increments count and persists votes separately', async () => {
@@ -59,6 +81,74 @@ describe('VoteService', () => {
 
     const votes = JSON.parse(localStorage.getItem(VOTES_KEY)!);
     expect(votes['item-1']['opt-si']).toBe(2);
+  });
+
+  it('commitBallot increments all preguntas and stores last papeleta', async () => {
+    const service = TestBed.inject(VoteService);
+    service.saveConfig(twoQuestionConfig());
+
+    const ok = service.commitBallot({ 'item-1': 'a1', 'item-2': 'b1' });
+    expect(ok).toBe(true);
+
+    const config = await firstValueFrom(service.config$);
+    expect(config!.votingItems[0].options[0].count).toBe(1);
+    expect(config!.votingItems[1].options[0].count).toBe(1);
+
+    const last = JSON.parse(localStorage.getItem(LAST_BALLOT_KEY)!);
+    expect(last).toEqual({ 'item-1': 'a1', 'item-2': 'b1' });
+  });
+
+  it('commitBallot rejects incomplete papeleta', () => {
+    const service = TestBed.inject(VoteService);
+    service.saveConfig(twoQuestionConfig());
+
+    expect(service.commitBallot({ 'item-1': 'a1' })).toBe(false);
+    expect(service.canUndoLastBallot()).toBe(false);
+  });
+
+  it('undoLastBallot reverts last contabilizada papeleta', async () => {
+    const service = TestBed.inject(VoteService);
+    service.saveConfig(twoQuestionConfig());
+    service.commitBallot({ 'item-1': 'a1', 'item-2': 'b1' });
+    service.commitBallot({ 'item-1': 'a1', 'item-2': 'b1' });
+
+    expect(service.undoLastBallot()).toBe(true);
+
+    const config = await firstValueFrom(service.config$);
+    expect(config!.votingItems[0].options[0].count).toBe(1);
+    expect(config!.votingItems[1].options[0].count).toBe(1);
+    expect(service.canUndoLastBallot()).toBe(false);
+  });
+
+  it('undoLastBallot survives reload', async () => {
+    const first = TestBed.inject(VoteService);
+    first.saveConfig(sampleConfig());
+    first.commitBallot({ 'item-1': 'opt-si' });
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    const reloaded = TestBed.inject(VoteService);
+
+    expect(reloaded.canUndoLastBallot()).toBe(true);
+    expect(reloaded.undoLastBallot()).toBe(true);
+    const config = await firstValueFrom(reloaded.config$);
+    expect(config!.votingItems[0].options[0].count).toBe(0);
+  });
+
+  it('applyManualCorrection clears undo and sets absolute counts', async () => {
+    const service = TestBed.inject(VoteService);
+    service.saveConfig(twoQuestionConfig());
+    service.commitBallot({ 'item-1': 'a1', 'item-2': 'b1' });
+
+    service.applyManualCorrection({
+      'item-1': { a1: 10 },
+      'item-2': { b1: 3 },
+    });
+
+    expect(service.canUndoLastBallot()).toBe(false);
+    const config = await firstValueFrom(service.config$);
+    expect(config!.votingItems[0].options[0].count).toBe(10);
+    expect(config!.votingItems[1].options[0].count).toBe(3);
   });
 
   it('reloads config and vote counts from localStorage in a new instance', async () => {
@@ -83,6 +173,7 @@ describe('VoteService', () => {
 
     expect(localStorage.getItem(CONFIG_KEY)).toBeNull();
     expect(localStorage.getItem(VOTES_KEY)).toBeNull();
+    expect(localStorage.getItem(LAST_BALLOT_KEY)).toBeNull();
     const config = await firstValueFrom(service.config$);
     expect(config).toBeNull();
   });

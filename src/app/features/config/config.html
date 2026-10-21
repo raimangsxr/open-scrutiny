@@ -1,102 +1,123 @@
-<div class="config-container">
-  <h1>Configuración de Elecciones</h1>
+<div class="app-page-shell">
+  <app-election-header
+    title="Configuración"
+    description="Defina el proceso electoral antes del día de la votación."
+  />
 
-  <mat-card *ngIf="storageError" class="storage-error-banner">
-    <mat-card-content>
-      <p>{{ storageError }}</p>
-      <button mat-stroked-button type="button" color="warn" (click)="clearCorruptData()">
-        Descartar datos guardados
-      </button>
-    </mat-card-content>
-  </mat-card>
-
-  <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
-
-    <!-- General Info Card -->
-    <mat-card class="section-card">
-      <mat-card-header>
-        <mat-card-title>Información General</mat-card-title>
-      </mat-card-header>
+  <div class="app-page-body">
+    <mat-card *ngIf="storageError" class="storage-error-banner section-card">
       <mat-card-content>
-        <div class="form-group">
-          <label for="logo">Logo del Organismo</label>
-          <input type="file" id="logo" (change)="onLogoSelected($event)" accept="image/*">
-          <div *ngIf="logoPreview" class="logo-preview">
-            <img [src]="logoPreview" alt="Logo preview">
-          </div>
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Título de las Elecciones</mat-label>
-          <input matInput formControlName="title" placeholder="Ej: Elecciones Generales 2025">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción</mat-label>
-          <textarea matInput formControlName="description" rows="3" placeholder="Descripción breve..."></textarea>
-        </mat-form-field>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Voting Items Card -->
-    <mat-card class="section-card">
-      <mat-card-header>
-        <mat-card-title>Votaciones</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div formArrayName="votingItems">
-          <mat-card *ngFor="let item of votingItems.controls; let i = index" [formGroupName]="i"
-            class="voting-item-card">
-            <mat-card-header>
-              <mat-card-title>Votación #{{i + 1}}</mat-card-title>
-              <button mat-icon-button color="warn" type="button" (click)="removeVotingItem(i)"
-                *ngIf="votingItems.length > 1">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </mat-card-header>
-            <mat-card-content>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>¿Qué se vota?</mat-label>
-                <input matInput formControlName="question" placeholder="Ej: Delegado de Clase">
-              </mat-form-field>
-
-              <!-- Options -->
-              <div class="options-section">
-                <h4>Opciones</h4>
-                <div formArrayName="options">
-                  <div *ngFor="let option of getOptions(i).controls; let j = index" [formGroupName]="j"
-                    class="option-row">
-                    <mat-form-field appearance="outline" class="option-field">
-                      <mat-label>Opción {{j + 1}}</mat-label>
-                      <input matInput formControlName="label" placeholder="Nombre de la opción">
-                    </mat-form-field>
-                    <button mat-icon-button color="warn" type="button" (click)="removeOption(i, j)"
-                      *ngIf="getOptions(i).length > 1">
-                      <mat-icon>close</mat-icon>
-                    </button>
-                  </div>
-                </div>
-                <button mat-stroked-button type="button" (click)="addOption(i)" color="primary">
-                  <mat-icon>add</mat-icon>
-                  Añadir Opción
-                </button>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <button mat-raised-button type="button" (click)="addVotingItem()" color="primary" class="add-voting-btn">
-          <mat-icon>add</mat-icon>
-          Añadir Nueva Votación
+        <p>{{ storageError }}</p>
+        <button mat-stroked-button type="button" color="warn" (click)="clearCorruptData()">
+          Descartar datos guardados
         </button>
       </mat-card-content>
     </mat-card>
 
-    <!-- Submit -->
-    <div class="actions">
-      <button mat-raised-button type="submit" color="accent" class="submit-btn" [disabled]="!configForm.valid">
-        Iniciar Escrutinio
-      </button>
-    </div>
-  </form>
+    <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
+      <mat-card class="section-card">
+        <mat-card-header>
+          <mat-card-title>Información general</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="form-group">
+            <label for="logo">Logo del organismo</label>
+            <input type="file" id="logo" (change)="onLogoSelected($event)" accept="image/*" />
+            <div *ngIf="logoPreview" class="logo-preview">
+              <img [src]="logoPreview" alt="Vista previa del logo" />
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Título del proceso electoral</mat-label>
+            <input matInput formControlName="title" placeholder="Ej: Elecciones generales 2025" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Descripción</mat-label>
+            <textarea
+              matInput
+              formControlName="description"
+              rows="3"
+              placeholder="Descripción breve..."
+            ></textarea>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <mat-card-header>
+          <mat-card-title>Preguntas</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div formArrayName="votingItems">
+            <mat-card
+              *ngFor="let item of votingItems.controls; let i = index"
+              [formGroupName]="i"
+              class="voting-item-card"
+            >
+              <mat-card-header>
+                <mat-card-title>Pregunta #{{ i + 1 }}</mat-card-title>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  (click)="removeVotingItem(i)"
+                  *ngIf="votingItems.length > 1"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Enunciado</mat-label>
+                  <input matInput formControlName="question" placeholder="Ej: Delegado de clase" />
+                </mat-form-field>
+
+                <div class="options-section">
+                  <h4>Opciones</h4>
+                  <div formArrayName="options">
+                    <div
+                      *ngFor="let option of getOptions(i).controls; let j = index"
+                      [formGroupName]="j"
+                      class="option-row"
+                    >
+                      <mat-form-field appearance="outline" class="option-field">
+                        <mat-label>Opción {{ j + 1 }}</mat-label>
+                        <input matInput formControlName="label" placeholder="Nombre de la opción" />
+                      </mat-form-field>
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        type="button"
+                        (click)="removeOption(i, j)"
+                        *ngIf="getOptions(i).length > 1"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                  <button mat-stroked-button type="button" (click)="addOption(i)" color="primary">
+                    <mat-icon>add</mat-icon>
+                    Añadir opción
+                  </button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <button mat-raised-button type="button" (click)="addVotingItem()" color="primary" class="add-voting-btn">
+            <mat-icon>add</mat-icon>
+            Añadir pregunta
+          </button>
+        </mat-card-content>
+      </mat-card>
+
+      <div class="actions">
+        <button mat-raised-button type="submit" color="accent" class="submit-btn" [disabled]="!configForm.valid">
+          Guardar e ir a ejecución
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

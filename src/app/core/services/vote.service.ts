@@ -20,8 +20,11 @@ export interface ElectionConfig {
     votingItems: VotingItem[];
 }
 
+export type BallotSelections = Record<string, string>;
+
 const CONFIG_KEY = 'vote_app_data';
 const VOTES_KEY = 'vote_app_counts';
+const LAST_BALLOT_KEY = 'vote_app_last_ballot';
 
 @Injectable({
     providedIn: 'root'
@@ -39,6 +42,70 @@ export class VoteService {
 
     getStorageError(): string | null {
         return this.storageErrorSubject.value;
+    }
+
+    canUndoLastBallot(): boolean {
+        return this.readLastBallot() !== null;
+    }
+
+    commitBallot(selections: BallotSelections): boolean {
+        const currentConfig = this.configSubject.value;
+        if (!currentConfig) return false;
+
+        if (!this.isCompleteBallot(currentConfig, selections)) {
+            return false;
+        }
+
+        for (const item of currentConfig.votingItems) {
+            const optionId = selections[item.id];
+            const option = item.options.find((o) => o.id === optionId);
+            if (!option) return false;
+            option.count++;
+        }
+
+        this.persistCounts(currentConfig);
+        this.writeLastBallot(selections);
+        this.configSubject.next({ ...currentConfig });
+        return true;
+    }
+
+    undoLastBallot(): boolean {
+        const currentConfig = this.configSubject.value;
+        const lastBallot = this.readLastBallot();
+        if (!currentConfig || !lastBallot) return false;
+
+        for (const item of currentConfig.votingItems) {
+            const optionId = lastBallot[item.id];
+            if (!optionId) continue;
+            const option = item.options.find((o) => o.id === optionId);
+            if (!option) continue;
+            option.count = Math.max(0, option.count - 1);
+        }
+
+        this.clearLastBallot();
+        this.persistCounts(currentConfig);
+        this.configSubject.next({ ...currentConfig });
+        return true;
+    }
+
+    applyManualCorrection(counts: Record<string, Record<string, number>>): void {
+        const currentConfig = this.configSubject.value;
+        if (!currentConfig) return;
+
+        currentConfig.votingItems.forEach((item) => {
+            const itemCounts = counts[item.id];
+            if (!itemCounts) return;
+            item.options.forEach((opt) => {
+                if (itemCounts[opt.id] !== undefined) {
+                    const n = itemCounts[opt.id];
+                    opt.count = Math.max(0, Math.floor(Number(n)) || 0);
+                }
+            });
+        });
+
+        this.clearLastBallot();
+        this.persistCounts(currentConfig);
+        this.configSubject.next({ ...currentConfig });
     }
 
     private loadFromStorage() {
@@ -115,6 +182,14 @@ export class VoteService {
         );
     }
 
+    private isCompleteBallot(config: ElectionConfig, selections: BallotSelections): boolean {
+        return config.votingItems.every((item) => {
+            const optionId = selections[item.id];
+            if (!optionId) return false;
+            return item.options.some((o) => o.id === optionId);
+        });
+    }
+
     private applyVotesToConfig(config: ElectionConfig, votes: Record<string, Record<string, number>>) {
         if (!votes) return;
 
@@ -137,6 +212,7 @@ export class VoteService {
         );
         localStorage.setItem(CONFIG_KEY, JSON.stringify(configToSave));
         localStorage.removeItem(VOTES_KEY);
+        this.clearLastBallot();
         this.clearStorageError();
         this.configSubject.next(config);
     }
@@ -150,7 +226,7 @@ export class VoteService {
             const optionIndex = currentConfig.votingItems[itemIndex].options.findIndex(o => o.id === optionId);
             if (optionIndex > -1) {
                 currentConfig.votingItems[itemIndex].options[optionIndex].count++;
-                this.saveVotesToStorage(currentConfig);
+                this.persistCounts(currentConfig);
                 this.configSubject.next({ ...currentConfig });
             }
         }
@@ -166,11 +242,12 @@ export class VoteService {
         if (!option) return;
 
         option.count = safeCount;
-        this.saveVotesToStorage(currentConfig);
+        this.clearLastBallot();
+        this.persistCounts(currentConfig);
         this.configSubject.next({ ...currentConfig });
     }
 
-    private saveVotesToStorage(config: ElectionConfig) {
+    private persistCounts(config: ElectionConfig) {
         const votes: Record<string, Record<string, number>> = {};
         config.votingItems.forEach(item => {
             votes[item.id] = {};
@@ -181,9 +258,30 @@ export class VoteService {
         localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
     }
 
+    private readLastBallot(): BallotSelections | null {
+        const raw = localStorage.getItem(LAST_BALLOT_KEY);
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw) as BallotSelections;
+            if (!parsed || typeof parsed !== 'object') return null;
+            return parsed;
+        } catch {
+            return null;
+        }
+    }
+
+    private writeLastBallot(selections: BallotSelections) {
+        localStorage.setItem(LAST_BALLOT_KEY, JSON.stringify(selections));
+    }
+
+    private clearLastBallot() {
+        localStorage.removeItem(LAST_BALLOT_KEY);
+    }
+
     reset() {
         localStorage.removeItem(CONFIG_KEY);
         localStorage.removeItem(VOTES_KEY);
+        this.clearLastBallot();
         this.clearStorageError();
         this.configSubject.next(null);
     }

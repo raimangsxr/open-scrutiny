@@ -1,0 +1,34 @@
+<div class="question-column">
+  <div class="chart-section">
+    <h2 class="question-title">{{ item.question }}</h2>
+    <p class="vote-total">Total: {{ totalVotes() }}</p>
+    <div class="chart-wrapper">
+      <ngx-charts-bar-vertical
+        [scheme]="colorScheme"
+        [results]="chartResults"
+        [gradient]="gradient"
+        [xAxis]="showXAxis"
+        [yAxis]="showYAxis"
+        [showXAxisLabel]="showXAxisLabel"
+        [showYAxisLabel]="showYAxisLabel"
+        [xAxisLabel]="xAxisLabel"
+        [yAxisLabel]="yAxisLabel"
+        [yAxisTicks]="yAxisTicks"
+      >
+      </ngx-charts-bar-vertical>
+    </div>
+  </div>
+  <div class="options-section">
+    <button
+      mat-raised-button
+      type="button"
+      *ngFor="let option of item.options"
+      class="option-btn"
+      [class.option-btn-pressed]="isPressed(option.id)"
+      [color]="isPressed(option.id) ? 'primary' : undefined"
+      (click)="onOptionClick(option.id)"
+    >
+      {{ option.label }}
+    </button>
+  </div>
+</div>

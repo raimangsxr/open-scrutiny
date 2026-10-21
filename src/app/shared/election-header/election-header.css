@@ -1,0 +1,26 @@
+.election-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.election-logo {
+  max-height: 64px;
+  border-radius: 8px;
+}
+
+.election-info h1 {
+  margin: 0 0 0.25rem;
+  color: #1a1a1a;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.election-info p {
+  margin: 0;
+  color: #555;
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+}
