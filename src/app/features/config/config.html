@@ -1,6 +1,15 @@
 <div class="config-container">
   <h1>Configuración de Elecciones</h1>
 
+  <mat-card *ngIf="storageError" class="storage-error-banner">
+    <mat-card-content>
+      <p>{{ storageError }}</p>
+      <button mat-stroked-button type="button" color="warn" (click)="clearCorruptData()">
+        Descartar datos guardados
+      </button>
+    </mat-card-content>
+  </mat-card>
+
   <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
 
     <!-- General Info Card -->

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 export interface VotingOption {
     id: string;
@@ -28,48 +28,102 @@ const VOTES_KEY = 'vote_app_counts';
 })
 export class VoteService {
     private configSubject = new BehaviorSubject<ElectionConfig | null>(null);
+    private storageErrorSubject = new BehaviorSubject<string | null>(null);
+
     config$ = this.configSubject.asObservable();
+    storageError$ = this.storageErrorSubject.asObservable();
 
     constructor() {
         this.loadFromStorage();
     }
 
+    getStorageError(): string | null {
+        return this.storageErrorSubject.value;
+    }
+
     private loadFromStorage() {
+        this.clearStorageError();
         const configData = localStorage.getItem(CONFIG_KEY);
         const votesData = localStorage.getItem(VOTES_KEY);
 
-        if (configData) {
-            try {
-                const config = JSON.parse(configData);
-
-                // Load votes if available and merge into config
-                if (votesData) {
-                    try {
-                        const votes = JSON.parse(votesData);
-                        this.applyVotesToConfig(config, votes);
-                    } catch (e) {
-                        console.error('Error parsing votes data', e);
-                    }
-                }
-
-                this.configSubject.next(config);
-            } catch (e) {
-                console.error('Error parsing local storage data', e);
-                this.configSubject.next(null);
-            }
-        } else {
+        if (!configData) {
             this.configSubject.next(null);
+            return;
         }
+
+        let config: ElectionConfig;
+        try {
+            config = JSON.parse(configData);
+        } catch {
+            this.failStorage(
+                'No se pudo leer la configuración guardada (datos corruptos). Vuelva a configurar la elección.'
+            );
+            return;
+        }
+
+        if (!this.isValidConfig(config)) {
+            this.failStorage(
+                'La configuración guardada no es válida o está incompleta. Vuelva a configurar la elección.'
+            );
+            return;
+        }
+
+        if (votesData) {
+            try {
+                const votes = JSON.parse(votesData);
+                this.applyVotesToConfig(config, votes);
+            } catch {
+                this.failStorage(
+                    'No se pudieron leer los votos guardados (datos corruptos). Vuelva a configurar la elección.'
+                );
+                return;
+            }
+        }
+
+        this.configSubject.next(config);
     }
 
-    private applyVotesToConfig(config: ElectionConfig, votes: any) {
+    private failStorage(message: string) {
+        this.storageErrorSubject.next(message);
+        this.configSubject.next(null);
+    }
+
+    private clearStorageError() {
+        this.storageErrorSubject.next(null);
+    }
+
+    private isValidConfig(config: unknown): config is ElectionConfig {
+        if (!config || typeof config !== 'object') {
+            return false;
+        }
+        const c = config as ElectionConfig;
+        if (typeof c.title !== 'string' || !Array.isArray(c.votingItems) || c.votingItems.length === 0) {
+            return false;
+        }
+        return c.votingItems.every(
+            (item) =>
+                typeof item.id === 'string' &&
+                typeof item.question === 'string' &&
+                Array.isArray(item.options) &&
+                item.options.length > 0 &&
+                item.options.every(
+                    (opt) =>
+                        typeof opt.id === 'string' &&
+                        typeof opt.label === 'string' &&
+                        typeof opt.count === 'number'
+                )
+        );
+    }
+
+    private applyVotesToConfig(config: ElectionConfig, votes: Record<string, Record<string, number>>) {
         if (!votes) return;
 
         config.votingItems.forEach(item => {
             if (votes[item.id]) {
                 item.options.forEach(option => {
                     if (votes[item.id][option.id] !== undefined) {
-                        option.count = votes[item.id][option.id];
+                        const n = votes[item.id][option.id];
+                        option.count = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : option.count;
                     }
                 });
             }
@@ -77,15 +131,13 @@ export class VoteService {
     }
 
     saveConfig(config: ElectionConfig) {
-        // Save config definition (resetting counts in the stored definition to keep it clean)
         const configToSave = JSON.parse(JSON.stringify(config));
-        configToSave.votingItems.forEach((i: any) => i.options.forEach((o: any) => o.count = 0));
+        configToSave.votingItems.forEach((i: VotingItem) =>
+            i.options.forEach((o) => (o.count = 0))
+        );
         localStorage.setItem(CONFIG_KEY, JSON.stringify(configToSave));
-
-        // If this is a new config save (from Config mode), we effectively reset the current state
-        // We also clear the votes storage because a new config implies a new election
         localStorage.removeItem(VOTES_KEY);
-
+        this.clearStorageError();
         this.configSubject.next(config);
     }
 
@@ -98,16 +150,28 @@ export class VoteService {
             const optionIndex = currentConfig.votingItems[itemIndex].options.findIndex(o => o.id === optionId);
             if (optionIndex > -1) {
                 currentConfig.votingItems[itemIndex].options[optionIndex].count++;
-                // Save votes to separate storage
                 this.saveVotesToStorage(currentConfig);
-                // Notify subscribers
-                this.configSubject.next(currentConfig);
+                this.configSubject.next({ ...currentConfig });
             }
         }
     }
 
+    setOptionCount(itemId: string, optionId: string, count: number) {
+        const currentConfig = this.configSubject.value;
+        if (!currentConfig) return;
+
+        const safeCount = Math.max(0, Math.floor(Number(count)) || 0);
+        const item = currentConfig.votingItems.find((i) => i.id === itemId);
+        const option = item?.options.find((o) => o.id === optionId);
+        if (!option) return;
+
+        option.count = safeCount;
+        this.saveVotesToStorage(currentConfig);
+        this.configSubject.next({ ...currentConfig });
+    }
+
     private saveVotesToStorage(config: ElectionConfig) {
-        const votes: any = {};
+        const votes: Record<string, Record<string, number>> = {};
         config.votingItems.forEach(item => {
             votes[item.id] = {};
             item.options.forEach(option => {
@@ -120,6 +184,7 @@ export class VoteService {
     reset() {
         localStorage.removeItem(CONFIG_KEY);
         localStorage.removeItem(VOTES_KEY);
+        this.clearStorageError();
         this.configSubject.next(null);
     }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { VoteService, ElectionConfig } from '../../core/services/vote.service';
 import { v4 as uuidv4 } from 'uuid';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-config',
@@ -25,9 +26,11 @@ import { v4 as uuidv4 } from 'uuid';
   templateUrl: './config.html',
   styleUrl: './config.css'
 })
-export class ConfigComponent {
+export class ConfigComponent implements OnInit, OnDestroy {
   configForm: FormGroup;
   logoPreview: string | null = null;
+  storageError: string | null = null;
+  private storageErrorSub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -43,6 +46,21 @@ export class ConfigComponent {
 
     // Add initial voting item
     this.addVotingItem();
+  }
+
+  ngOnInit() {
+    this.storageErrorSub = this.voteService.storageError$.subscribe(
+      (err) => (this.storageError = err)
+    );
+  }
+
+  ngOnDestroy() {
+    this.storageErrorSub?.unsubscribe();
+  }
+
+  clearCorruptData() {
+    this.voteService.reset();
+    this.storageError = null;
   }
 
   get votingItems() {

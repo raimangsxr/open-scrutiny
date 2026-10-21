@@ -1,52 +1,60 @@
-# Open Scrutiny - Vote Counting App
+# Open Scrutiny — Vote Counting App
 
-![Execution Mode](/Users/rromanit/.gemini/antigravity/brain/97fcd9da-4085-46db-8e27-dfa371e4c53b/final_execution_mode_1764543930417.png)
-
-This is a standalone Angular application designed for simple vote counting and real-time visualization of results. It uses Angular Material for the UI and NGX-Charts for displaying vote counts.
+Standalone Angular app for simple vote counting and live bar-chart results. Configuration and counts persist in the browser (`localStorage`).
 
 ## Features
 
--   **Configuration Mode** (`/config`):
-    -   Set election title and description.
-    -   Upload a logo (optional).
-    -   Define multiple voting items (questions).
-    -   For each item, configure voting options (defaults to SI, NO, N/C, but fully customizable).
-    -   All configuration is saved to `localStorage` (`vote_app_data`).
+### Configuration (`/config`)
 
--   **Execution Mode** (`/execution`):
-    -   Displays election details and logo.
-    -   Shows horizontal cards for each voting item with bar charts visualizing the votes.
-    -   Provides buttons for each option to cast votes.
-    -   Includes manual input fields to set vote counts directly.
-    -   A central "Contabilizar Voto" button saves all selected votes simultaneously.
-    -   Vote counts are stored separately in `localStorage` (`vote_app_counts`) and persist across sessions.
-    -   Charts update in real-time as votes are counted.
-    -   Y-axis on charts displays only integer values.
+- Election title and description
+- Optional logo (stored as a data URL in `localStorage`)
+- Multiple voting items (questions), each with customizable options (defaults: SI, NO, N/C)
+- Saved under the key `vote_app_data`
 
-## Tech Stack
+### Execution (`/execution`)
 
--   Angular 21 (Standalone Components)
--   Angular Material
--   NGX-Charts
--   TypeScript
--   LocalStorage for data persistence
+- Header with title, description, and logo
+- Bar charts per question (NGX-Charts), Y-axis integer ticks
+- Per question: option buttons to **select** one choice per item, then **Contabilizar Voto** adds **one vote** to each selected option
+- **Manual totals**: numeric fields per option; **Aplicar totales manuales** sets absolute counts (overwrites counts for that item’s options)
+- Vote totals stored under `vote_app_counts` and merged with config on load
+- If stored data is corrupt, an error is shown with a path back to configuration
 
-## Development server
+## Data and limits
 
-To start a local development server, run:
+| Key | Contents |
+|-----|----------|
+| `vote_app_data` | Election definition (counts in this blob are stored as zero; live counts live in `vote_app_counts`) |
+| `vote_app_counts` | Map of item id → option id → count |
 
-```bash
-ng serve
-```
+Data is **per browser / per device**. Clearing site data removes the election. Large logos increase `localStorage` usage.
 
-Once the server is running, open your browser and navigate to `http://localhost:4201/`. The application will automatically reload whenever you modify any of the source files.
+## Tech stack
 
-## Building
+- Angular 21 (standalone components)
+- Angular Material
+- NGX-Charts
+- TypeScript
+- Vitest (via `ng test`)
 
-To build the project run:
+## Development
 
 ```bash
-ng build
+npm ci
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory.
+Open `http://localhost:4200/` (default Angular dev server port unless configured otherwise).
+
+## Build and CI
+
+```bash
+npm run build   # output in dist/
+npm test
+```
+
+See [docs/BUILD.md](docs/BUILD.md) for bundle budgets and dependency policy.
+
+## Agent / project docs
+
+Engineering skills read [AGENTS.md](AGENTS.md) and `docs/agents/`.

@@ -1,3 +1,8 @@
+.storage-error-banner {
+  margin-bottom: 1rem;
+  border-left: 4px solid #f44336;
+}
+
 .config-container {
   max-width: 900px;
   margin: 0 auto;
